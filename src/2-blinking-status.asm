@@ -13,7 +13,9 @@ BasicUpstart2(init)
 		.const STATUS_OFF_CHAR				= $20
 		.const STATUS_ON_CHAR		 		= $51
 		.const STATUS_LOC_ADDR 				= $0400
-		.const STATUS_BLINK_SPEED 			= $80
+		.const STATUS_BLINK_SPEED 			= $3c
+
+		.var temp_addr						= $fb
 
 init:
 		jsr empty_screen
@@ -28,12 +30,12 @@ loop:
 // LOOP SUBROUTINES
 
 wait:
-		ldx #STATUS_BLINK_SPEED
+		lda #STATUS_BLINK_SPEED
+		sta temp_addr
 !:		lda RASTER_LINE_ADDR
 		cmp #$ff
 		bne !-
-		dex
-		cpx #$00
+		dec temp_addr
 		bne !-
 		rts
 

@@ -20,7 +20,7 @@ BasicUpstart2(init)
 		.const CHAR_SPACE				= $20
 		.const FILL_SPEED 				= $80
 
-		.var temp_addr				= $fb
+		.var temp_addr					= $fb
 
 init:
 		jsr empty_screen

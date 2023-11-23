@@ -4,23 +4,30 @@
 // is filled.
 //
 // + Randomly select a screen location from $0400 - $07e7
+// + Change color of previous location.
+// + Fill current location with active color.
+// + Set current location as previous location at pointer temp var.
 //------------------------------------------------------------------------
 
 BasicUpstart2(init)
 
 		*= $c000 "Init"
 
-		.const BORDER_COLOR_ADDR		= $d020
-		.const BG_COLOR_ADDR			= $d021
-		.const SCREEN_TOP_LEFT_ADDR 	= $0400
-		.const RASTER_LINE_ADDR			= $d012
-		.const RAND_VAL_ADDR			= $d41b
+		.const BORDER_COLOR_ADDR			= $d020
+		.const BG_COLOR_ADDR				= $d021
+		.const SCREEN_TOP_LEFT_ADDR 		= $0400
+		.const RASTER_LINE_ADDR				= $d012
+		.const RAND_VAL_ADDR				= $d41b
 
-		.const CHAR_FILL		 		= $51
-		.const CHAR_SPACE				= $20
-		.const FILL_SPEED 				= $80
+		.const CHAR_FILL		 			= $d0
+		.const CHAR_SPACE					= $20
+		.const LOOP_SPEED 					= $40
+		.const ACTIVE_COLOR					= $06
+		.const INACTIVE_COLOR				= $0b
+		.const HI_BYTE_COLOR_RAM_OFFSET 	= $d4
 
-		.var temp_addr					= $fb
+		.var prev_loc_pointer				= $fd
+		.var temp_pointer					= $fb
 
 init:
 		jsr empty_screen
@@ -35,7 +42,7 @@ loop:
 // LOOP SUBROUTINES
 
 wait:
-		ldx #FILL_SPEED
+		ldx #LOOP_SPEED
 !:		lda RASTER_LINE_ADDR
 		cmp #$ff
 		bne !-
@@ -45,12 +52,22 @@ wait:
 		rts
 
 draw:
+		lda prev_loc_pointer
+		sta temp_pointer
+		lda prev_loc_pointer+1
+		clc
+		adc #HI_BYTE_COLOR_RAM_OFFSET
+		sta temp_pointer+1
+		lda #INACTIVE_COLOR
+		ldy #$00
+		sta (temp_pointer), y				// change color of prev loc to inactive
 		lda RAND_VAL_ADDR
 		and #%00000111						// val $07 or less
 		cmp #$04							// val greater or equal to $04
 		bcs !+
 		adc #$04							// if less than $04 add $04
-!:		sta temp_addr+1
+!:		sta temp_pointer+1
+		sta prev_loc_pointer+1
 		cmp #$07
 		bne !+
 		lda RAND_VAL_ADDR					// if page is $07 then check to make sure we stay in screen memory ($07e7)
@@ -59,10 +76,18 @@ draw:
 		and #%11100111
 		jmp !++
 !:		lda RAND_VAL_ADDR
-!:		sta temp_addr
+!:		sta temp_pointer
+		sta prev_loc_pointer
 		lda #CHAR_FILL
 		ldy #$00
-		sta (temp_addr), y
+		sta (temp_pointer), y
+		lda temp_pointer+1
+		clc
+		adc #HI_BYTE_COLOR_RAM_OFFSET
+		sta temp_pointer+1
+		lda #ACTIVE_COLOR
+		ldy #$00
+		sta (temp_pointer), y				// change color of curr loc to active
 		rts
 
 
@@ -81,6 +106,9 @@ empty_screen:
 		lda #$00							// set border and background color to black (#$00)
 		sta BORDER_COLOR_ADDR
 		sta BG_COLOR_ADDR
+		sta prev_loc_pointer				// init prev loc to $0400
+		lda #$04
+		sta prev_loc_pointer+1
 		rts
 
 init_sid_rand:

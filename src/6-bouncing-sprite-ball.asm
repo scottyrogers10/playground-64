@@ -13,10 +13,10 @@ BasicUpstart2(init)
 
 		.const BORDER_BOTTOM				= $e5
 		.const BORDER_LEFT					= $18
-		.const BORDER_RIGHT					= $47
-		.const BORDER_TOP					= $28
+		.const BORDER_RIGHT					= $51
+		.const BORDER_TOP					= $22
 		.const CHAR_SPACE					= $20
-		.const SPEED 						= $04
+		.const SPEED 						= $01
 
 		.var temp_pointer					= $fb
 
@@ -27,17 +27,17 @@ init:
 loop:
 		jsr wait
 		jsr collision_detection
-		jsr update_x_position
 		jsr update_y_position
+		jsr update_x_position
 		jmp loop
 
 //------------------------------------------------------------------------
 // LOOP SUBROUTINES
 
 wait:
-!:		lda RASTER_LINE_ADDR
-		cmp #$ff
-		bne !-
+		lda RASTER_LINE_ADDR
+		cmp #$00
+		bne wait
 		rts
 
 collision_detection: {
@@ -72,6 +72,22 @@ collision_detection: {
 !:		rts
 }
 
+update_y_position: {
+		lda sprite_y_dir
+		beq move_up
+		lda SPRITE_Y_POS_ADDR
+		clc
+		adc #SPEED
+		sta SPRITE_Y_POS_ADDR
+		rts
+	move_up:
+		lda SPRITE_Y_POS_ADDR
+		sec
+		sbc #SPEED
+		sta SPRITE_Y_POS_ADDR
+		rts
+}
+
 update_x_position: {
 		lda sprite_x_dir
 		beq move_left
@@ -86,30 +102,13 @@ update_x_position: {
 	move_left:
 		lda SPRITE_X_POS_ADDR
 		sec
-		sbc #SPEED-1
+		sbc #SPEED
 		sta SPRITE_X_POS_ADDR
 		bcs !+
 		lda #$00
 		sta SPRITE_X_OVERFLOW_ADDR
 !:		rts
 }
-
-update_y_position: {
-		lda sprite_y_dir
-		beq move_up
-		lda SPRITE_Y_POS_ADDR
-		clc
-		adc #SPEED
-		sta SPRITE_Y_POS_ADDR
-		rts
-	move_up:
-		lda SPRITE_Y_POS_ADDR
-		sec
-		sbc #SPEED-1
-		sta SPRITE_Y_POS_ADDR
-		rts
-}
-
 
 //------------------------------------------------------------------------
 // INIT SUBROUTINES
@@ -152,11 +151,11 @@ sprite_0:
 		.byte $00,$00,$00,$00,$00,$00,$00,$00
 		.byte $00,$00,$00,$00,$00,$00,$00,$00
 		.byte $00,$00,$00,$00,$00,$00,$00,$00
-		.byte $00,$00,$00,$00,$00,$00,$0f,$f8
-		.byte $00,$1f,$fc,$00,$3f,$fe,$00,$7f
-		.byte $ff,$00,$ff,$ff,$80,$ff,$ff,$80
-		.byte $ff,$ff,$80,$7f,$ff,$00,$3f,$fe
-		.byte $00,$1f,$fc,$00,$0f,$f8,$00,$01
+		.byte $00,$00,$00,$00,$00,$00,$00,$00
+		.byte $00,$00,$00,$00,$00,$00,$00,$00
+		.byte $00,$00,$00,$00,$00,$00,$00,$00
+		.byte $7c,$00,$00,$fe,$00,$00,$fe,$00
+		.byte $00,$fe,$00,$00,$7c,$00,$00,$01
 
 sprite_x_dir:
 		.byte $00							// 0 = left, 1 = right

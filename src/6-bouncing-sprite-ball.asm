@@ -21,6 +21,7 @@ BasicUpstart2(init)
 		.var temp_pointer					= $fb
 
 init:
+		sei
 		jsr empty_screen
 		jsr init_sprite_0
 
@@ -36,8 +37,11 @@ loop:
 
 wait:
 		lda RASTER_LINE_ADDR
-		cmp #$00
-		bne wait
+		cmp #$f8
+		beq wait
+!:		lda RASTER_LINE_ADDR
+		cmp #$f8
+		bne !-
 		rts
 
 collision_detection: {

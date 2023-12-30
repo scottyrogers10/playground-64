@@ -155,20 +155,48 @@ empty_screen:
 		rts
 
 init_snake:
-		lda #<SNAKE_SCREEN_PTR_TBL_START_ADDR
+		lda #<[SNAKE_SCREEN_PTR_TBL_START_ADDR+10]
 		sta snake_head_dbl_ptr
+		lda #>[SNAKE_SCREEN_PTR_TBL_START_ADDR+10]
+		sta snake_head_dbl_ptr+1
+		lda #<SNAKE_SCREEN_PTR_TBL_START_ADDR
 		sta snake_tail_dbl_ptr
 		lda #>SNAKE_SCREEN_PTR_TBL_START_ADDR
-		sta snake_head_dbl_ptr+1
 		sta snake_tail_dbl_ptr+1
-		lda #$00
-		sta SNAKE_SCREEN_PTR_TBL_START_ADDR
-		sta snake_head_screen_ptr
-		sta snake_tail_screen_ptr
-		lda #$04
-		sta SNAKE_SCREEN_PTR_TBL_START_ADDR+1
-		sta snake_head_screen_ptr+1
-		sta snake_tail_screen_ptr+1
+		ldx #$05
+		stx snake_head_screen_ptr
+		stx snake_head_screen_ptr+1
+		stx snake_tail_screen_ptr+1
+		stx SNAKE_SCREEN_PTR_TBL_START_ADDR+11
+		stx SNAKE_SCREEN_PTR_TBL_START_ADDR+10
+		stx SNAKE_SCREEN_PTR_TBL_START_ADDR+9
+		stx SNAKE_SCREEN_PTR_TBL_START_ADDR+7
+		stx SNAKE_SCREEN_PTR_TBL_START_ADDR+5
+		stx SNAKE_SCREEN_PTR_TBL_START_ADDR+3
+		stx SNAKE_SCREEN_PTR_TBL_START_ADDR+1
+		dex
+		stx SNAKE_SCREEN_PTR_TBL_START_ADDR+8
+		dex
+		stx SNAKE_SCREEN_PTR_TBL_START_ADDR+6
+		dex
+		stx SNAKE_SCREEN_PTR_TBL_START_ADDR+4
+		dex
+		stx SNAKE_SCREEN_PTR_TBL_START_ADDR+2
+		dex
+		stx SNAKE_SCREEN_PTR_TBL_START_ADDR
+		stx snake_tail_screen_ptr+0
+		//draw body
+	  	ldx #$05
+		ldy #$00
+		stx temp_ptr+1
+		lda #CHAR_OUTLINE_CIRCLE
+	!:	dex
+		stx temp_ptr
+		sta (temp_ptr), y
+		bne !-
+		// draw head
+		lda #CHAR_FILLED_CIRCLE
+		sta (snake_head_screen_ptr), y
 		rts
 
 //------------------------------------------------------------------------

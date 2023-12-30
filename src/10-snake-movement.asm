@@ -14,6 +14,8 @@ BasicUpstart2(init)
 		.const CHAR_FILLED_CIRCLE					= $51
 		.const CHAR_OUTLINE_CIRCLE					= $57
 
+		.const SNAKE_SPEED							= $0a
+
 		.var snake_head_dbl_ptr						= $fb
 		.var snake_head_screen_ptr					= $02
 		.var snake_tail_dbl_ptr						= $fd
@@ -36,11 +38,14 @@ loop:
 // LOOP SUBROUTINES
 
 wait:
+		ldx #SNAKE_SPEED
 		lda RASTER_LINE_ADDR
 		cmp #$fb
 		beq wait
 	!:	lda RASTER_LINE_ADDR
 		cmp #$fb
+		bne !-
+		dex
 		bne !-
 		rts
 
@@ -79,7 +84,25 @@ update_position: {
 		lsr
 		beq move_right
 	move_up:
+		lda snake_head_screen_ptr
+		sec
+		sbc #$28
+		sta snake_head_screen_ptr
+		bcs end
+		lda snake_head_screen_ptr+1
+		sbc #$00
+		sta snake_head_screen_ptr+1
+		jmp end
 	move_down:
+		lda snake_head_screen_ptr
+		clc
+		adc #$28
+		sta snake_head_screen_ptr
+		bcc end
+		lda snake_head_screen_ptr+1
+		adc #$00
+		sta snake_head_screen_ptr+1
+		jmp end
 	move_left:
 		lda snake_head_screen_ptr
 		sec
@@ -104,20 +127,23 @@ update_position: {
 }
 
 draw:
-		// clear previous position
+		//clear tail
 		ldy #$00
+		lda #CHAR_SPACE
+		sta (snake_tail_screen_ptr), y
+		// draw body on previous position
 		lda (snake_head_dbl_ptr), y
 		sta temp_ptr
 		iny
 		lda (snake_head_dbl_ptr), y
 		sta temp_ptr+1
-		lda #CHAR_SPACE
+		lda #CHAR_OUTLINE_CIRCLE
 		ldy #$00
 		sta (temp_ptr), y
 		// draw new position
 		lda #CHAR_FILLED_CIRCLE
 		sta (snake_head_screen_ptr), y
-		// update ptr table and dbl ptr
+		// update head ptr table and dbl ptr
 		inc snake_head_dbl_ptr
 		inc snake_head_dbl_ptr
 		bne !+
@@ -127,6 +153,17 @@ draw:
 		lda snake_head_screen_ptr+1
 		iny
 		sta (snake_head_dbl_ptr), y
+		// update tail ptr table and dbl ptr
+		inc snake_tail_dbl_ptr
+		inc snake_tail_dbl_ptr
+		bne !+
+		inc snake_tail_dbl_ptr+1
+	!:	ldy #$00
+		lda (snake_tail_dbl_ptr), y
+		sta snake_tail_screen_ptr
+		iny
+		lda (snake_tail_dbl_ptr), y
+		sta snake_tail_screen_ptr+1
 		rts
 
 //------------------------------------------------------------------------
@@ -184,7 +221,7 @@ init_snake:
 		stx SNAKE_SCREEN_PTR_TBL_START_ADDR+2
 		dex
 		stx SNAKE_SCREEN_PTR_TBL_START_ADDR
-		stx snake_tail_screen_ptr+0
+		stx snake_tail_screen_ptr
 		//draw body
 	  	ldx #$05
 		ldy #$00

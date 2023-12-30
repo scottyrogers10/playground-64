@@ -48,10 +48,10 @@ loop:
 
 wait:
 		lda RASTER_LINE_ADDR
-		cmp #$f8
+		cmp #$fb
 		beq wait
 !:		lda RASTER_LINE_ADDR
-		cmp #$f8
+		cmp #$fb
 		bne !-
 		rts
 
